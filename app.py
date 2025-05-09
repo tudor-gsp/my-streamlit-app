@@ -2,19 +2,23 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
+import PyPDF2
 
-# Ensure Streamlit uses the correct port on Render
-PORT = os.environ.get("PORT", 8501)
+st.title("File Upload Example")
 
-st.set_page_config(page_title="Sample App")
+uploaded_file = st.file_uploader("Choose a file", type=["txt", "csv", "pdf"])
 
-st.title("🎈 Welcome to My Streamlit App!")
-st.write("This is a simple example deployed on Render.")
+if uploaded_file is not None:
+    file_details = {"Filename": uploaded_file.name, "FileType": uploaded_file.type, "FileSize": uploaded_file.size}
+    st.write(file_details)
 
-# Example data
-df = pd.DataFrame({
-    "Column A": np.random.rand(10),
-    "Column B": np.random.rand(10)
-})
-
-st.line_chart(df)
+    if uploaded_file.type == "text/plain":
+        content = uploaded_file.read().decode("utf-8")
+        st.text(content)
+    elif uploaded_file.type == "application/pdf":
+        pdf_reader = PyPDF2.PdfReader(uploaded_file)
+        for page_num, page in enumerate(pdf_reader.pages):
+            st.text(page.extract_text())
+    elif uploaded_file.type == "text/csv":
+        df = pd.read_csv(uploaded_file)
+        st.dataframe(df)
